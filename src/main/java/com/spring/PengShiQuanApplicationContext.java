@@ -2,7 +2,9 @@ package com.spring;
 
 import com.sun.xml.internal.ws.util.StringUtils;
 
+import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.HashMap;
@@ -42,13 +44,13 @@ public class PengShiQuanApplicationContext {
             File file = new File(resource.getFile());
             if (file.isDirectory()) {
                 for (File listFile : file.listFiles()) {
-                   // System.err.println(listFile.getAbsolutePath());
+                    // System.err.println(listFile.getAbsolutePath());
                     String filePath = listFile.getAbsolutePath();
                     try {
                         Class<?> aClass = loader.loadClass(filePath.substring(filePath.indexOf("com"), filePath.indexOf(".class"))
                                 .replace(String.valueOf(File.separatorChar), "."));
                         if (aClass.isAnnotationPresent(Component.class)) {
-                           // System.err.println("找到一个注解" + aClass);
+                            // System.err.println("找到一个注解" + aClass);
                             Component component = aClass.getAnnotation(Component.class);
                             BeanDefinition definition = new BeanDefinition();
                             definition.setType(aClass);
@@ -63,7 +65,7 @@ public class PengShiQuanApplicationContext {
                             // 获取bean名称
                             String beanName = component.value();
                             if ("".equals(beanName)) {
-
+                                beanName = Introspector.decapitalize(aClass.getSimpleName());
                             }
                             beanDefinitionMap.put(beanName, definition);
                         }
@@ -91,6 +93,13 @@ public class PengShiQuanApplicationContext {
         Object bean = null;
         try {
             bean = type.getConstructor().newInstance();
+            //依赖注入
+            for (Field field : type.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Autowired.class)) {
+                    field.setAccessible(true);
+                    field.set(bean, getBean(field.getName()));
+                }
+            }
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -109,7 +118,13 @@ public class PengShiQuanApplicationContext {
         }
         BeanDefinition definition = beanDefinitionMap.get(beanName);
         if ("singleton".equals(definition.getScope())) {
-            return singletonObjects.get(beanName);
+            Object bean = singletonObjects.get(beanName);
+            //如果为null，说明没有初始创建，需要现在创建，然后放入单例池
+            if (bean == null) {
+                bean = creatBean(beanName, definition);
+                singletonObjects.put(beanName, bean);
+            }
+            return bean;
         } else {
             return creatBean(beanName, definition);
         }

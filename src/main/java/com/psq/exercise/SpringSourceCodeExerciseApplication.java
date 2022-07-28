@@ -1,5 +1,6 @@
 package com.psq.exercise;
 
+import com.psq.exercise.service.OrderService;
 import com.psq.exercise.service.UserService;
 import com.spring.ComponentScan;
 import com.spring.PengShiQuanApplicationContext;
@@ -14,11 +15,12 @@ public class SpringSourceCodeExerciseApplication {
 
         UserService userService1 = (UserService) context.getBean("userService");
 
-        UserService userService2 = (UserService) context.getBean("userService");
-        userService.test();
+        OrderService orderService = (OrderService) context.getBean("orderService");
+        userService.test2();
+        orderService.test();
         System.err.println(userService);
         System.err.println(userService1);
-        System.err.println(userService2);
+        System.err.println(orderService);
     }
 
 }
