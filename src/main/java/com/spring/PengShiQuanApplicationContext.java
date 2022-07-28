@@ -8,6 +8,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +24,8 @@ public class PengShiQuanApplicationContext {
     private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<String, BeanDefinition>();
 
     private Map<String, Object> singletonObjects = new HashMap<String, Object>();
+
+    private List<BeanPostProcessor> processorList = new LinkedList<>();
 
     public PengShiQuanApplicationContext(Class baseClazz) {
         this.baseClazz = baseClazz;
@@ -51,6 +55,11 @@ public class PengShiQuanApplicationContext {
                                 .replace(String.valueOf(File.separatorChar), "."));
                         if (aClass.isAnnotationPresent(Component.class)) {
                             // System.err.println("找到一个注解" + aClass);
+
+                            if (BeanPostProcessor.class.isAssignableFrom(aClass)) {
+                                BeanPostProcessor processor = (BeanPostProcessor) aClass.getConstructor().newInstance();
+                                processorList.add(processor);
+                            }
                             Component component = aClass.getAnnotation(Component.class);
                             BeanDefinition definition = new BeanDefinition();
                             definition.setType(aClass);
@@ -69,7 +78,8 @@ public class PengShiQuanApplicationContext {
                             }
                             beanDefinitionMap.put(beanName, definition);
                         }
-                    } catch (ClassNotFoundException e) {
+                    } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
+                             IllegalAccessException | NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -100,13 +110,15 @@ public class PengShiQuanApplicationContext {
                     field.set(bean, getBean(field.getName()));
                 }
             }
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchMethodException e) {
+
+            //初始化
+            if (bean instanceof InitializingBean) {
+                ((InitializingBean) bean).afterPropertiesSet();
+            }
+            for (BeanPostProcessor processor : processorList) {
+                processor.postProcessAfterInitialization(bean, beanName);
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return bean;
