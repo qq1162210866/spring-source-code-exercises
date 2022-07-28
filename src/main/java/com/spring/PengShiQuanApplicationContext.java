@@ -1,7 +1,5 @@
 package com.spring;
 
-import com.sun.xml.internal.ws.util.StringUtils;
-
 import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -59,6 +57,7 @@ public class PengShiQuanApplicationContext {
                             if (BeanPostProcessor.class.isAssignableFrom(aClass)) {
                                 BeanPostProcessor processor = (BeanPostProcessor) aClass.getConstructor().newInstance();
                                 processorList.add(processor);
+                                continue;
                             }
                             Component component = aClass.getAnnotation(Component.class);
                             BeanDefinition definition = new BeanDefinition();
@@ -79,7 +78,7 @@ public class PengShiQuanApplicationContext {
                             beanDefinitionMap.put(beanName, definition);
                         }
                     } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
-                             IllegalAccessException | NoSuchMethodException e) {
+                            IllegalAccessException | NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -115,8 +114,9 @@ public class PengShiQuanApplicationContext {
             if (bean instanceof InitializingBean) {
                 ((InitializingBean) bean).afterPropertiesSet();
             }
+            //执行BeanPostProcessor
             for (BeanPostProcessor processor : processorList) {
-                processor.postProcessAfterInitialization(bean, beanName);
+                bean = processor.postProcessAfterInitialization(bean, beanName);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

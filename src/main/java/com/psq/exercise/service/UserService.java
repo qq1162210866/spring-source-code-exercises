@@ -2,7 +2,6 @@ package com.psq.exercise.service;
 
 import com.spring.Autowired;
 import com.spring.Component;
-import com.spring.InitializingBean;
 import com.spring.Scope;
 
 /**
@@ -14,15 +13,17 @@ import com.spring.Scope;
  */
 @Component("userService")
 @Scope()
-public class UserService implements InitializingBean {
+public class UserService implements UserServiceInterface {
 
     @Autowired
     private OrderService orderService;
 
+    @Override
     public void test() {
         System.out.println("this is UserService test method");
     }
 
+    @Override
     public void test2() {
         System.out.print("this is UserService test method");
         System.out.println(" next is orderService" + orderService);
