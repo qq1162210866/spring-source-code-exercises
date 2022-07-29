@@ -78,7 +78,7 @@ public class PengShiQuanApplicationContext {
                             beanDefinitionMap.put(beanName, definition);
                         }
                     } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
-                            IllegalAccessException | NoSuchMethodException e) {
+                             IllegalAccessException | NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -109,12 +109,21 @@ public class PengShiQuanApplicationContext {
                     field.set(bean, getBean(field.getName()));
                 }
             }
+            if (bean instanceof BeanNameAware) {
+                ((BeanNameAware) bean).setBeanName(beanName);
+            }
+
+            //执行BeanPostProcessor before
+            for (BeanPostProcessor processor : processorList) {
+                bean = processor.postProcessBeforeInitialization(bean, beanName);
+            }
 
             //初始化
             if (bean instanceof InitializingBean) {
                 ((InitializingBean) bean).afterPropertiesSet();
             }
-            //执行BeanPostProcessor
+
+            //执行BeanPostProcessor after
             for (BeanPostProcessor processor : processorList) {
                 bean = processor.postProcessAfterInitialization(bean, beanName);
             }

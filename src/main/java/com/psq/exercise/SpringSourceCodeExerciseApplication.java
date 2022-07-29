@@ -15,7 +15,7 @@ public class SpringSourceCodeExerciseApplication {
         UserServiceInterface userService = (UserServiceInterface) context.getBean("userService");
 
         OrderService orderService = (OrderService) context.getBean("orderService");
-        userService.test2();
+        userService.test();
         orderService.test();
         System.err.println(userService);
         System.err.println(orderService);

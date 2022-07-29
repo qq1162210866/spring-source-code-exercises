@@ -1,6 +1,7 @@
 package com.psq.exercise.service;
 
 import com.spring.Autowired;
+import com.spring.BeanNameAware;
 import com.spring.Component;
 import com.spring.Scope;
 
@@ -13,14 +14,26 @@ import com.spring.Scope;
  */
 @Component("userService")
 @Scope()
-public class UserService implements UserServiceInterface {
+public class UserService implements UserServiceInterface, BeanNameAware {
 
     @Autowired
     private OrderService orderService;
 
+    @ExerciseValue("Shiquan Peng")
+    private String userName;
+
+    private String beanName;
+
     @Override
     public void test() {
         System.out.println("this is UserService test method");
+        System.out.println("userName is " + userName);
+        System.out.println("beanName is " + beanName);
+    }
+
+    @Override
+    public void setBeanName(String name) {
+        this.beanName = name;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.psq.exercise.service;
 import com.spring.BeanPostProcessor;
 import com.spring.Component;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 
 /**
@@ -22,6 +23,22 @@ public class ExerciseBeanPostProcessor implements BeanPostProcessor {
                 System.out.println("开始执行切面逻辑");
                 return method.invoke(bean, args);
             });
+        }
+        return bean;
+    }
+
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String beanName) {
+        for (Field field : bean.getClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(ExerciseValue.class)) {
+                ExerciseValue annotation = field.getAnnotation(ExerciseValue.class);
+                field.setAccessible(true);
+                try {
+                    field.set(bean, annotation.value());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
         return bean;
     }
